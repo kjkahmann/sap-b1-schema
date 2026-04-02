@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAP Business One - Database Schema Explorer</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-card-hover: #22263a;
+  --bg-input: #161822;
+  --border: #2a2e3e;
+  --border-focus: #4a7cff;
+  --text: #e4e6ef;
+  --text-dim: #8b8fa3;
+  --text-bright: #fff;
+  --accent: #4a7cff;
+  --accent-hover: #6090ff;
+  --header-bg: #00234d;
+  --tag-header: #2d6a4f;
+  --tag-line: #b5651d;
+  --tag-history: #6a3d8f;
+  --tag-other: #4a5568;
+  --key-primary: #c9a13c;
+  --key-unique: #4a7cff;
+  --key-index: #6b7280;
+  --relation-out: #4a7cff;
+  --relation-in: #2d8f5e;
+  --constraint-bg: #252840;
+  --scrollbar-bg: #1a1d27;
+  --scrollbar-thumb: #3a3e52;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #4a4e62; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
+/* Header */
+.app-header {
+  grid-column: 1 / -1;
+  background: var(--header-bg);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-bright);
+  white-space: nowrap;
+}
+
+.app-header .stats {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* Sidebar */
+.sidebar {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.search-box {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+  border-color: var(--border-focus);
+}
+
+.search-box input::placeholder {
+  color: var(--text-dim);
+}
+
+/* Filters */
+.filters {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.filter-group label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.filter-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
+}
+
+.filter-btn.active {
+  background: var(--accent);
+  color: var(--text-bright);
+  border-color: var(--accent);
+}
+
+.filter-btn.type-header.active { background: var(--tag-header); border-color: var(--tag-header); }
+.filter-btn.type-line.active { background: var(--tag-line); border-color: var(--tag-line); }
+.filter-btn.type-history.active { background: var(--tag-history); border-color: var(--tag-history); }
+.filter-btn.type-other.active { background: var(--tag-other); border-color: var(--tag-other); }
+
+/* Category filter */
+.category-filter {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.category-filter select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.category-filter select:focus {
+  border-color: var(--border-focus);
+}
+
+.category-filter select option {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+/* Line level filter */
+.line-level-filter {
+  padding: 4px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  display: none;
+}
+
+.line-level-filter.visible {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.line-level-filter label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+/* Table list */
+.table-list-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-count {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.table-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.table-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-item:hover {
+  background: var(--bg-card-hover);
+}
+
+.table-item.selected {
+  background: var(--bg-card);
+  border-left-color: var(--accent);
+}
+
+.table-item .table-name {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Consolas', 'Fira Code', monospace;
+  color: var(--text-bright);
+  min-width: 60px;
+}
+
+.table-item .table-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.table-type-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.badge-header { background: var(--tag-header); color: #a8d5ba; }
+.badge-line { background: var(--tag-line); color: #f5d0a9; }
+.badge-history { background: var(--tag-history); color: #c9a4e0; }
+.badge-other { background: var(--tag-other); color: #a0aec0; }
+
+/* Main content */
+.main-content {
+  overflow-y: auto;
+  padding: 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-dim);
+  font-size: 16px;
+  gap: 8px;
+}
+
+.empty-state .icon {
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+/* Table detail view */
+.table-detail {
+  padding: 24px;
+}
+
+.table-detail-header {
+  margin-bottom: 20px;
+}
+
+.table-detail-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-bright);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-detail-header .subtitle {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.table-detail-header .meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.table-detail-header .meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Tabs */
+.detail-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.detail-tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dim);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.detail-tab:hover {
+  color: var(--text);
+}
+
+.detail-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.detail-tab .count {
+  font-size: 11px;
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+
+/* Columns table */
+.columns-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.columns-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 1;
+}
+
+.columns-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.columns-table tr:hover td {
+  background: var(--bg-card);
+}
+
+.columns-table .col-field {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  color: var(--text-bright);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.columns-table .col-type {
+  color: #c9a13c;
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+.columns-table .col-size {
+  color: var(--text-dim);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+.columns-table .col-related a {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-weight: 600;
+}
+
+.columns-table .col-default {
+  color: var(--text-dim);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+/* Column search in detail view */
+.column-search {
+  margin-bottom: 12px;
+}
+
+.column-search input {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.column-search input:focus {
+  border-color: var(--border-focus);
+}
+
+/* Constraints inline */
+.constraints-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.constraint-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--constraint-bg);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.constraint-tag .c-val {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.constraint-tag .c-label {
+  color: var(--text-dim);
+}
+
+/* Keys section */
+.keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.key-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.key-card .key-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.key-card .key-name {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-weight: 700;
+  color: var(--text-bright);
+  font-size: 14px;
+}
+
+.key-card .key-unique-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.key-unique { background: var(--key-primary); color: #1a1d27; }
+.key-not-unique { background: var(--key-index); color: var(--text); }
+
+.key-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.key-field-tag {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 13px;
+  padding: 4px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-bright);
+}
+
+/* Relations section */
+.relations-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.relation-group h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.relation-group h3 .count {
+  font-size: 11px;
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--text-dim);
+}
+
+.relation-direction {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.dir-outgoing { background: rgba(74, 124, 255, 0.15); color: var(--relation-out); }
+.dir-incoming { background: rgba(45, 143, 94, 0.15); color: var(--relation-in); }
+
+.relation-table-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.relation-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 13px;
+}
+
+.relation-tag:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+}
+
+.relation-tag .rel-name {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.relation-tag .rel-desc {
+  color: var(--text-dim);
+  font-size: 11px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relation-tag .rel-type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Relation detail columns */
+.relation-detail-section {
+  margin-top: 16px;
+}
+
+.relation-fields-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.relation-fields-table th {
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  border-bottom: 2px solid var(--border);
+}
+
+.relation-fields-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+/* Relation graph mini view */
+.relation-graph {
+  margin-top: 16px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-height: 200px;
+  position: relative;
+  overflow: auto;
+}
+
+.graph-node {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  position: absolute;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 100px;
+  text-align: center;
+}
+
+.graph-node:hover {
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.graph-node.current {
+  border-color: var(--accent);
+  background: rgba(74, 124, 255, 0.1);
+}
+
+.graph-node .node-name {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-bright);
+}
+
+.graph-node .node-desc {
+  font-size: 10px;
+  color: var(--text-dim);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keyboard shortcut hints */
+.shortcut-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 4px 12px 8px;
+}
+
+kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: 'Consolas', monospace;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+}
+
+/* Highlight match */
+.highlight {
+  background: rgba(74, 124, 255, 0.3);
+  color: var(--text-bright);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* Key indicator on columns */
+.key-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.key-indicator.pk { background: var(--key-primary); }
+.key-indicator.idx { background: var(--key-index); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    max-height: 40vh;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Header -->
+  <header class="app-header">
+    <h1>SAP B1 Schema Explorer</h1>
+    <span class="stats" id="headerStats"></span>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Tabelle suchen (Name oder Beschreibung)..." autofocus>
+    </div>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label>Tabellentyp</label>
+        <button class="filter-btn type-header active" data-type="header" onclick="toggleTypeFilter('header', this)">Kopfdaten (O...)</button>
+        <button class="filter-btn type-line active" data-type="line" onclick="toggleTypeFilter('line', this)">Zeilen (...N)</button>
+        <button class="filter-btn type-history active" data-type="history" onclick="toggleTypeFilter('history', this)">Historie (A...)</button>
+        <button class="filter-btn type-other active" data-type="other" onclick="toggleTypeFilter('other', this)">Sonstige</button>
+      </div>
+    </div>
+
+    <div class="line-level-filter" id="lineLevelFilter">
+      <label>Zeilenebene</label>
+    </div>
+
+    <div class="category-filter">
+      <select id="categorySelect" onchange="applyFilters()">
+        <option value="">Alle Kategorien</option>
+      </select>
+    </div>
+
+    <div class="table-list-container">
+      <div class="table-count" id="tableCount"></div>
+      <div class="table-list" id="tableList"></div>
+    </div>
+
+    <div class="shortcut-hint">
+      <kbd>Ctrl+K</kbd> Suche fokussieren &middot; <kbd>&uarr;&darr;</kbd> Navigation &middot; <kbd>Enter</kbd> Auswählen
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <div class="empty-state">
+      <div class="icon">&#128269;</div>
+      <div>Wähle eine Tabelle aus der Liste oder suche nach einem Tabellennamen</div>
+    </div>
+  </main>
+</div>
+
+<script src="sap-b1-data.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // State
+  let activeTypes = new Set(['header', 'line', 'history', 'other']);
+  let activeCategory = '';
+  let activeLineLevels = new Set();
+  let searchQuery = '';
+  let selectedTable = null;
+  let filteredTables = [];
+  let selectedIndex = -1;
+  let activeTab = 'columns';
+  let columnSearchQuery = '';
+
+  // Computed data
+  const allTableNames = Object.keys(SAP_B1_TABLES).sort();
+  const lineLevels = new Set();
+  allTableNames.forEach(name => {
+    const t = SAP_B1_TABLES[name];
+    if (t.lineLevel !== null) lineLevels.add(t.lineLevel);
+  });
+  const sortedLineLevels = [...lineLevels].sort((a, b) => a - b);
+
+  // Init
+  function init() {
+    document.getElementById('headerStats').textContent =
+      `${allTableNames.length} Tabellen in ${SAP_B1_CATEGORIES.length} Kategorien`;
+
+    // Populate categories
+    const catSelect = document.getElementById('categorySelect');
+    SAP_B1_CATEGORIES.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = `${cat.name} (${cat.tableCount})`;
+      catSelect.appendChild(opt);
+    });
+
+    // Populate line level filters
+    const llContainer = document.getElementById('lineLevelFilter');
+    sortedLineLevels.forEach(level => {
+      activeLineLevels.add(level);
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn active';
+      btn.textContent = `Ebene ${level}`;
+      btn.dataset.level = level;
+      btn.onclick = () => toggleLineLevelFilter(level, btn);
+      llContainer.appendChild(btn);
+    });
+
+    // Search
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', e => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      applyFilters();
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', handleKeyDown);
+
+    applyFilters();
+  }
+
+  // Filters
+  window.toggleTypeFilter = function(type, btn) {
+    if (activeTypes.has(type)) {
+      activeTypes.delete(type);
+      btn.classList.remove('active');
+    } else {
+      activeTypes.add(type);
+      btn.classList.add('active');
+    }
+
+    // Show/hide line level filter
+    const llFilter = document.getElementById('lineLevelFilter');
+    llFilter.classList.toggle('visible', activeTypes.has('line'));
+
+    applyFilters();
+  };
+
+  function toggleLineLevelFilter(level, btn) {
+    if (activeLineLevels.has(level)) {
+      activeLineLevels.delete(level);
+      btn.classList.remove('active');
+    } else {
+      activeLineLevels.add(level);
+      btn.classList.add('active');
+    }
+    applyFilters();
+  }
+
+  window.applyFilters = function() {
+    activeCategory = document.getElementById('categorySelect').value;
+
+    filteredTables = allTableNames.filter(name => {
+      const t = SAP_B1_TABLES[name];
+
+      // Type filter
+      if (!activeTypes.has(t.type)) return false;
+
+      // Line level filter
+      if (t.type === 'line' && t.lineLevel !== null && !activeLineLevels.has(t.lineLevel)) return false;
+
+      // Category filter
+      if (activeCategory && t.category !== activeCategory) return false;
+
+      // Search filter
+      if (searchQuery) {
+        const q = searchQuery;
+        return name.toLowerCase().includes(q) ||
+               t.description.toLowerCase().includes(q) ||
+               t.title.toLowerCase().includes(q) ||
+               t.columns.some(c =>
+                 c.field.toLowerCase().includes(q) ||
+                 c.description.toLowerCase().includes(q)
+               );
+      }
+
+      return true;
+    });
+
+    selectedIndex = filteredTables.indexOf(selectedTable);
+    renderTableList();
+  };
+
+  // Render table list
+  function renderTableList() {
+    const container = document.getElementById('tableList');
+    const countEl = document.getElementById('tableCount');
+    countEl.textContent = `${filteredTables.length} Tabellen`;
+
+    // Virtual scrolling: render visible items
+    const fragment = document.createDocumentFragment();
+
+    // For performance with 2800+ items, use simple DOM
+    const maxRender = 500;
+    const toRender = filteredTables.slice(0, maxRender);
+
+    toRender.forEach((name, idx) => {
+      const t = SAP_B1_TABLES[name];
+      const item = document.createElement('div');
+      item.className = 'table-item' + (name === selectedTable ? ' selected' : '');
+      item.dataset.table = name;
+      item.dataset.index = idx;
+
+      const badge = document.createElement('span');
+      badge.className = `table-type-badge badge-${t.type}`;
+      badge.textContent = t.type === 'header' ? 'H' : t.type === 'line' ? `L${t.lineLevel || ''}` : t.type === 'history' ? 'A' : '?';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'table-name';
+      if (searchQuery) {
+        nameSpan.innerHTML = highlightMatch(name, searchQuery);
+      } else {
+        nameSpan.textContent = name;
+      }
+
+      const descSpan = document.createElement('span');
+      descSpan.className = 'table-desc';
+      if (searchQuery) {
+        descSpan.innerHTML = highlightMatch(t.description, searchQuery);
+      } else {
+        descSpan.textContent = t.description;
+      }
+
+      item.appendChild(badge);
+      item.appendChild(nameSpan);
+      item.appendChild(descSpan);
+
+      item.onclick = () => selectTable(name, idx);
+      fragment.appendChild(item);
+    });
+
+    if (filteredTables.length > maxRender) {
+      const more = document.createElement('div');
+      more.className = 'table-item';
+      more.style.justifyContent = 'center';
+      more.style.color = 'var(--text-dim)';
+      more.textContent = `... und ${filteredTables.length - maxRender} weitere. Suche verfeinern.`;
+      fragment.appendChild(more);
+    }
+
+    container.innerHTML = '';
+    container.appendChild(fragment);
+  }
+
+  function highlightMatch(text, query) {
+    if (!query) return escapeHtml(text);
+    const escaped = escapeHtml(text);
+    const escapedQuery = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    return escaped.replace(regex, '<span class="highlight">$1</span>');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Select table
+  window.selectTable = function(name, idx) {
+    selectedTable = name;
+    if (idx !== undefined) selectedIndex = idx;
+    else selectedIndex = filteredTables.indexOf(name);
+    activeTab = 'columns';
+    columnSearchQuery = '';
+
+    // Update list selection
+    document.querySelectorAll('.table-item.selected').forEach(el => el.classList.remove('selected'));
+    const item = document.querySelector(`.table-item[data-table="${name}"]`);
+    if (item) {
+      item.classList.add('selected');
+      item.scrollIntoView({ block: 'nearest' });
+    }
+
+    renderDetail(name);
+  };
+
+  // Render detail
+  function renderDetail(name) {
+    const t = SAP_B1_TABLES[name];
+    if (!t) return;
+
+    const main = document.getElementById('mainContent');
+
+    // Build key field set for marking in column table
+    const keyFields = new Map();
+    t.keys.forEach(k => {
+      k.fields.forEach(f => {
+        if (!keyFields.has(f)) keyFields.set(f, []);
+        keyFields.get(f).push(k);
+      });
+    });
+
+    const typeBadge = `<span class="table-type-badge badge-${t.type}">${
+      t.type === 'header' ? 'Kopfdaten' : t.type === 'line' ? `Zeilen (Ebene ${t.lineLevel})` : t.type === 'history' ? 'Historie' : 'Sonstige'
+    }</span>`;
+
+    const baseTableLink = t.baseTable && SAP_B1_TABLES['O' + t.baseTable]
+      ? ` &middot; <span>Basis: <a href="#" onclick="selectTable('O${escapeHtml(t.baseTable)}'); return false;">O${escapeHtml(t.baseTable)}</a></span>`
+      : '';
+
+    main.innerHTML = `
+      <div class="table-detail">
+        <div class="table-detail-header">
+          <h2><span style="font-family: Consolas, monospace;">${escapeHtml(name)}</span> ${typeBadge}</h2>
+          <div class="subtitle">${escapeHtml(t.description || t.title)}</div>
+          <div class="meta">
+            <span>Kategorie: ${escapeHtml((t.category || '').replace(/_/g, ' '))}</span>
+            <span>${t.columns.length} Spalten</span>
+            <span>${t.keys.length} Schlüssel</span>
+            <span>${t.relations.outgoing.length + t.relations.incoming.length} Verknüpfungen</span>
+            ${baseTableLink}
+          </div>
+        </div>
+
+        <div class="detail-tabs">
+          <button class="detail-tab${activeTab === 'columns' ? ' active' : ''}" onclick="switchTab('columns')">
+            Spalten<span class="count">${t.columns.length}</span>
+          </button>
+          <button class="detail-tab${activeTab === 'keys' ? ' active' : ''}" onclick="switchTab('keys')">
+            Schlüssel<span class="count">${t.keys.length}</span>
+          </button>
+          <button class="detail-tab${activeTab === 'relations' ? ' active' : ''}" onclick="switchTab('relations')">
+            Verknüpfungen<span class="count">${t.relations.outgoing.length + t.relations.incoming.length}</span>
+          </button>
+          <button class="detail-tab${activeTab === 'graph' ? ' active' : ''}" onclick="switchTab('graph')">
+            Graph
+          </button>
+        </div>
+
+        <div id="tabContent"></div>
+      </div>
+    `;
+
+    renderTabContent(name);
+  }
+
+  window.switchTab = function(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.detail-tab').forEach(el => {
+      el.classList.toggle('active', el.textContent.toLowerCase().startsWith(tab === 'graph' ? 'graph' : tab.substring(0, 4)));
+    });
+    // Fix: set active based on onclick value
+    document.querySelectorAll('.detail-tab').forEach(el => {
+      const onclick = el.getAttribute('onclick');
+      if (onclick && onclick.includes(`'${tab}'`)) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    });
+    renderTabContent(selectedTable);
+  };
+
+  function renderTabContent(name) {
+    const t = SAP_B1_TABLES[name];
+    const container = document.getElementById('tabContent');
+    if (!container) return;
+
+    // Build key field set
+    const keyFields = new Map();
+    t.keys.forEach(k => {
+      k.fields.forEach(f => {
+        if (!keyFields.has(f)) keyFields.set(f, []);
+        keyFields.get(f).push(k);
+      });
+    });
+
+    switch (activeTab) {
+      case 'columns':
+        renderColumnsTab(t, keyFields, container);
+        break;
+      case 'keys':
+        renderKeysTab(t, container);
+        break;
+      case 'relations':
+        renderRelationsTab(t, container);
+        break;
+      case 'graph':
+        renderGraphTab(t, container);
+        break;
+    }
+  }
+
+  function renderColumnsTab(t, keyFields, container) {
+    let cols = t.columns;
+
+    // Filter columns by search
+    if (columnSearchQuery) {
+      const q = columnSearchQuery.toLowerCase();
+      cols = cols.filter(c =>
+        c.field.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.type.toLowerCase().includes(q) ||
+        (c.related && c.related.toLowerCase().includes(q))
+      );
+    }
+
+    let html = `
+      <div class="column-search">
+        <input type="text" id="colSearchInput" placeholder="Spalten filtern..." value="${escapeHtml(columnSearchQuery)}">
+      </div>
+      <table class="columns-table">
+        <thead>
+          <tr>
+            <th>Feld</th>
+            <th>Beschreibung</th>
+            <th>Typ</th>
+            <th>Größe</th>
+            <th>Verknüpft</th>
+            <th>Standardwert</th>
+            <th>Constraints</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    cols.forEach(col => {
+      const keyInfo = keyFields.get(col.field);
+      let keyIndicator = '';
+      if (keyInfo) {
+        const isPk = keyInfo.some(k => k.name === 'PRIMARY');
+        keyIndicator = `<span class="key-indicator ${isPk ? 'pk' : 'idx'}" title="${keyInfo.map(k => k.name).join(', ')}"></span>`;
+      }
+
+      const relatedHtml = col.related
+        ? `<a href="#" onclick="selectTable('${escapeHtml(col.related)}'); return false;" title="Zu ${escapeHtml(col.related)} navigieren">${escapeHtml(col.related)}</a>`
+        : '<span style="color:var(--text-dim)">-</span>';
+
+      let constraintsHtml = '';
+      if (col.constraints && col.constraints.length > 0) {
+        constraintsHtml = '<div class="constraints-display">';
+        col.constraints.forEach(c => {
+          constraintsHtml += `<span class="constraint-tag"><span class="c-val">${escapeHtml(c.value)}</span><span class="c-label">${escapeHtml(c.label)}</span></span>`;
+        });
+        constraintsHtml += '</div>';
+      } else {
+        constraintsHtml = '<span style="color:var(--text-dim)">-</span>';
+      }
+
+      html += `
+        <tr>
+          <td class="col-field">${keyIndicator}${escapeHtml(col.field)}</td>
+          <td>${escapeHtml(col.description)}</td>
+          <td class="col-type">${escapeHtml(col.type)}</td>
+          <td class="col-size">${escapeHtml(col.size)}</td>
+          <td class="col-related">${relatedHtml}</td>
+          <td class="col-default">${escapeHtml(col.defaultValue) || '-'}</td>
+          <td>${constraintsHtml}</td>
+        </tr>
+      `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+
+    // Wire up column search
+    const colInput = document.getElementById('colSearchInput');
+    if (colInput) {
+      colInput.addEventListener('input', e => {
+        columnSearchQuery = e.target.value.trim();
+        renderTabContent(selectedTable);
+        // Re-focus the input
+        const newInput = document.getElementById('colSearchInput');
+        if (newInput) {
+          newInput.focus();
+          newInput.selectionStart = newInput.selectionEnd = newInput.value.length;
+        }
+      });
+    }
+  }
+
+  function renderKeysTab(t, container) {
+    if (t.keys.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-dim); padding: 20px;">Keine Schlüssel definiert.</div>';
+      return;
+    }
+
+    let html = '<div class="keys-list">';
+    t.keys.forEach(key => {
+      const badge = key.unique
+        ? '<span class="key-unique-badge key-unique">Unique</span>'
+        : '<span class="key-unique-badge key-not-unique">Non-Unique</span>';
+
+      html += `
+        <div class="key-card">
+          <div class="key-header">
+            <span class="key-name">${escapeHtml(key.name)}</span>
+            ${badge}
+          </div>
+          <div class="key-fields">
+            ${key.fields.map(f => `<span class="key-field-tag">${escapeHtml(f)}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  function renderRelationsTab(t, container) {
+    let html = '<div class="relations-section">';
+
+    // Outgoing
+    if (t.relations.outgoing.length > 0) {
+      html += `
+        <div class="relation-group">
+          <h3><span class="relation-direction dir-outgoing">Ausgehend &rarr;</span> Diese Tabelle verweist auf<span class="count">${t.relations.outgoing.length}</span></h3>
+          <div class="relation-table-list">
+      `;
+      t.relations.outgoing.sort().forEach(relName => {
+        const rel = SAP_B1_TABLES[relName];
+        const desc = rel ? rel.description : '';
+        const type = rel ? rel.type : 'other';
+        const dotColor = type === 'header' ? 'var(--tag-header)' : type === 'line' ? 'var(--tag-line)' : type === 'history' ? 'var(--tag-history)' : 'var(--tag-other)';
+
+        // Find which columns reference this table
+        const refCols = t.columns.filter(c => c.related === relName).map(c => c.field);
+
+        html += `
+          <div class="relation-tag" onclick="selectTable('${escapeHtml(relName)}')" title="Über: ${escapeHtml(refCols.join(', '))}">
+            <span class="rel-type-dot" style="background:${dotColor}"></span>
+            <span class="rel-name">${escapeHtml(relName)}</span>
+            <span class="rel-desc">${escapeHtml(desc)}</span>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      // Show detail: which fields link to which tables
+      html += '<div class="relation-detail-section"><table class="relation-fields-table"><thead><tr><th>Feld</th><th>Verweist auf</th><th>Beschreibung</th></tr></thead><tbody>';
+      t.columns.filter(c => c.related).forEach(col => {
+        const rel = SAP_B1_TABLES[col.related];
+        html += `<tr>
+          <td style="color:var(--text-bright)">${escapeHtml(col.field)}</td>
+          <td><a href="#" onclick="selectTable('${escapeHtml(col.related)}'); return false;">${escapeHtml(col.related)}</a></td>
+          <td style="color:var(--text-dim)">${escapeHtml(col.description)} &rarr; ${escapeHtml(rel ? rel.description : '')}</td>
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+
+      html += '</div>';
+    }
+
+    // Incoming
+    if (t.relations.incoming.length > 0) {
+      html += `
+        <div class="relation-group">
+          <h3><span class="relation-direction dir-incoming">&larr; Eingehend</span> Verweisen auf diese Tabelle<span class="count">${t.relations.incoming.length}</span></h3>
+          <div class="relation-table-list">
+      `;
+      t.relations.incoming.sort().forEach(relName => {
+        const rel = SAP_B1_TABLES[relName];
+        const desc = rel ? rel.description : '';
+        const type = rel ? rel.type : 'other';
+        const dotColor = type === 'header' ? 'var(--tag-header)' : type === 'line' ? 'var(--tag-line)' : type === 'history' ? 'var(--tag-history)' : 'var(--tag-other)';
+
+        html += `
+          <div class="relation-tag" onclick="selectTable('${escapeHtml(relName)}')" title="${escapeHtml(desc)}">
+            <span class="rel-type-dot" style="background:${dotColor}"></span>
+            <span class="rel-name">${escapeHtml(relName)}</span>
+            <span class="rel-desc">${escapeHtml(desc)}</span>
+          </div>
+        `;
+      });
+      html += '</div></div>';
+    }
+
+    if (t.relations.outgoing.length === 0 && t.relations.incoming.length === 0) {
+      html += '<div style="color:var(--text-dim); padding: 20px;">Keine Verknüpfungen gefunden.</div>';
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  function renderGraphTab(t, container) {
+    // Simple radial graph centering on current table
+    const outgoing = t.relations.outgoing.filter(n => SAP_B1_TABLES[n]).slice(0, 20);
+    const incoming = t.relations.incoming.filter(n => SAP_B1_TABLES[n]).slice(0, 20);
+    const total = outgoing.length + incoming.length;
+
+    if (total === 0) {
+      container.innerHTML = '<div style="color:var(--text-dim); padding: 20px;">Keine Verknüpfungen zum Darstellen.</div>';
+      return;
+    }
+
+    const width = Math.max(800, 200 + total * 50);
+    const height = Math.max(500, 200 + total * 25);
+    const cx = width / 2;
+    const cy = height / 2;
+
+    let svgLines = '';
+    let nodes = '';
+
+    // Center node
+    nodes += `
+      <div class="graph-node current" style="left:${cx - 60}px; top:${cy - 25}px;" onclick="selectTable('${escapeHtml(t.name)}')">
+        <span class="node-name">${escapeHtml(t.name)}</span>
+        <span class="node-desc">${escapeHtml(t.description)}</span>
+      </div>
+    `;
+
+    // Outgoing nodes (right side)
+    const outRadius = Math.min(300, 100 + outgoing.length * 15);
+    outgoing.forEach((name, i) => {
+      const angle = -Math.PI / 2 + (Math.PI * (i + 0.5) / Math.max(outgoing.length, 1));
+      const x = cx + Math.cos(angle) * outRadius;
+      const y = cy + Math.sin(angle) * outRadius;
+      const rel = SAP_B1_TABLES[name];
+      const type = rel ? rel.type : 'other';
+      const borderColor = type === 'header' ? 'var(--tag-header)' : type === 'line' ? 'var(--tag-line)' : type === 'history' ? 'var(--tag-history)' : 'var(--tag-other)';
+
+      svgLines += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--relation-out)" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.5"/>`;
+      svgLines += `<polygon points="${x},${y - 4} ${x + 8},${y} ${x},${y + 4}" fill="var(--relation-out)" opacity="0.7"/>`;
+
+      nodes += `
+        <div class="graph-node" style="left:${x - 50}px; top:${y - 20}px; border-color:${borderColor};" onclick="selectTable('${escapeHtml(name)}')">
+          <span class="node-name" style="font-size:11px;">${escapeHtml(name)}</span>
+          <span class="node-desc">${escapeHtml(rel ? rel.description : '')}</span>
+        </div>
+      `;
+    });
+
+    // Incoming nodes (left side)
+    const inRadius = Math.min(300, 100 + incoming.length * 15);
+    incoming.forEach((name, i) => {
+      const angle = Math.PI / 2 + (Math.PI * (i + 0.5) / Math.max(incoming.length, 1));
+      const x = cx + Math.cos(angle) * inRadius;
+      const y = cy + Math.sin(angle) * inRadius;
+      const rel = SAP_B1_TABLES[name];
+      const type = rel ? rel.type : 'other';
+      const borderColor = type === 'header' ? 'var(--tag-header)' : type === 'line' ? 'var(--tag-line)' : type === 'history' ? 'var(--tag-history)' : 'var(--tag-other)';
+
+      svgLines += `<line x1="${x}" y1="${y}" x2="${cx}" y2="${cy}" stroke="var(--relation-in)" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.5"/>`;
+      svgLines += `<polygon points="${cx},${cy - 4} ${cx - 8},${cy} ${cx},${cy + 4}" fill="var(--relation-in)" opacity="0.7"/>`;
+
+      nodes += `
+        <div class="graph-node" style="left:${x - 50}px; top:${y - 20}px; border-color:${borderColor};" onclick="selectTable('${escapeHtml(name)}')">
+          <span class="node-name" style="font-size:11px;">${escapeHtml(name)}</span>
+          <span class="node-desc">${escapeHtml(rel ? rel.description : '')}</span>
+        </div>
+      `;
+    });
+
+    const legendHtml = `
+      <div style="position:absolute; top:10px; right:10px; font-size:11px; color:var(--text-dim);">
+        <span style="color:var(--relation-out);">&#9654;</span> Ausgehend (max 20)
+        &nbsp;&middot;&nbsp;
+        <span style="color:var(--relation-in);">&#9664;</span> Eingehend (max 20)
+        ${outgoing.length < t.relations.outgoing.length || incoming.length < t.relations.incoming.length
+          ? `<br>Zeigt ${outgoing.length + incoming.length} von ${t.relations.outgoing.length + t.relations.incoming.length}`
+          : ''}
+      </div>
+    `;
+
+    container.innerHTML = `
+      <div class="relation-graph" style="width:${width}px; height:${height}px;">
+        <svg style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;">
+          ${svgLines}
+        </svg>
+        ${nodes}
+        ${legendHtml}
+      </div>
+    `;
+  }
+
+  // Keyboard navigation
+  function handleKeyDown(e) {
+    // Ctrl+K → focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      document.getElementById('searchInput').focus();
+      document.getElementById('searchInput').select();
+      return;
+    }
+
+    const searchFocused = document.activeElement === document.getElementById('searchInput');
+    if (!searchFocused) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (selectedIndex < filteredTables.length - 1) {
+        selectedIndex++;
+        selectTable(filteredTables[selectedIndex], selectedIndex);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (selectedIndex > 0) {
+        selectedIndex--;
+        selectTable(filteredTables[selectedIndex], selectedIndex);
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0 && selectedIndex < filteredTables.length) {
+        selectTable(filteredTables[selectedIndex], selectedIndex);
+      } else if (filteredTables.length > 0) {
+        selectTable(filteredTables[0], 0);
+      }
+    } else if (e.key === 'Escape') {
+      document.getElementById('searchInput').blur();
+    }
+  }
+
+  // Start
+  init();
+})();
+</script>
+</body>
+</html>

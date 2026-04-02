@@ -1,0 +1,286 @@
+﻿BODY {
+      background-color:#ffffff;
+}
+P {
+   font-family:Verdana;
+   color:#000000;
+   margin-top:6pt;
+   margin-bottom:6pt;
+   margin-left:0px;
+   font-weight:normal;
+   font-size:8pt;
+}
+LI.p {
+      font-family:Verdana;
+      color:#000000;
+      font-weight:normal;
+      font-size:8pt;
+}
+H1 {
+    font-family:Verdana;
+    font-weight:bold;
+    font-size:12pt;
+    color:#000080;
+    margin-top:9pt;
+    margin-bottom:2.5pt;
+    margin-left:0pt;
+}
+LI.h1 {
+       font-family:Verdana;
+       font-weight:bold;
+       font-size:12pt;
+       color:#000080;
+}
+H2 {
+    font-family:Verdana;
+    font-weight:bold;
+    font-size:10.0pt;
+    margin-bottom:6pt;
+    color:#000080;
+}
+LI.h2 {
+       font-family:Verdana;
+       font-weight:bold;
+       font-size:10.0pt;
+       color:#000080;
+}
+H3 {
+    font-family:Verdana;
+    color:#000000;
+    margin-bottom:5pt;
+    font-size:12pt;
+    font-weight:bold;
+    font-style:normal;
+}
+LI.h3 {
+       font-family:Verdana;
+       color:#000000;
+       font-size:12pt;
+       font-weight:bold;
+       font-style:normal;
+}
+H4 {
+    font-family:Verdana;
+    font-weight:normal;
+    font-size:10.0pt;
+    color:#000000;
+}
+LI.h4 {
+       font-family:Verdana;
+       font-weight:normal;
+       font-size:10.0pt;
+       color:#000000;
+}
+H5 {
+    font-family:Verdana;
+    font-weight:normal;
+    font-size:10.0pt;
+    color:#000000;
+}
+LI.h5 {
+       font-family:Verdana;
+       font-weight:normal;
+       font-size:10.0pt;
+       color:#000000;
+}
+H6 {
+    font-family:Verdana;
+    font-weight:normal;
+    font-size:10.0pt;
+    color:#000000;
+}
+LI.h6 {
+       font-family:Verdana;
+       font-weight:normal;
+       font-size:10.0pt;
+       color:#000000;
+}
+A:link {
+        color:#0000ff;
+        text-decoration:underline;
+}
+A:visited {
+           color:#0000ff;
+           text-decoration:underline;
+}
+A.expandspot {
+              cursor:hand;
+              font-family:Verdana, sans-serif;
+              font-style:normal;
+              font-weight:normal;
+              font-size:x-small;
+              x-on-hover:fontchange(Underline=on);
+              color:#3d5b7f;
+              text-decoration:none;
+}
+SPAN.expandtext {
+                 font-family:Verdana, sans-serif;
+                 font-style:normal;
+                 font-weight:normal;
+                 font-size:9pt;
+}
+A.dropspot {
+            cursor:hand;
+            font-weight:normal;
+            font-style:normal;
+            font-family:Verdana, sans-serif;
+            font-size:9pt;
+            x-on-hover:fontchange(color=#ef9f00);
+            text-decoration:none;
+}
+A.glossterm {
+             color:#800000;
+             cursor:hand;
+             font-style:italic;
+             text-decoration:none;
+}
+SPAN.glosstext {
+                font-style:italic;
+                font-weight:normal;
+                color:#0000ff;
+}
+OL {
+    margin-top:0px;
+    margin-bottom:0px;
+    font-size:10pt;
+    font-family:Verdana, sans-serif;
+}
+UL {
+    margin-top:0px;
+    margin-bottom:0px;
+    font-size:10pt;
+    font-family:Verdana, sans-serif;
+}
+P.Note {
+        margin-left:18pt;
+        line-height:Normal;
+}
+LI.p-Note {
+           line-height:Normal;
+}
+P.Code {
+        font-family:"Courier New"  , monospace;
+        margin-top:0pt;
+        margin-bottom:0pt;
+        font-size:10pt;
+        background-color:#efefef;
+}
+LI.p-Code {
+           font-family:"Courier New"  , monospace;
+           font-size:10pt;
+}
+P.listNum {
+           margin-left:0px;
+           font-weight:bold;
+           font-style:normal;
+}
+LI.p-listNum {
+              font-weight:bold;
+              font-style:normal;
+}
+P.Bullet {
+          list-style:square;
+}
+LI.p-Bullet {
+             list-style:square;
+}
+P.Qusetion {
+            font-weight:normal;
+            font-style:normal;
+            margin-top:15pt;
+            margin-bottom:15pt;
+}
+LI.p-Qusetion {
+               font-weight:normal;
+               font-style:normal;
+}
+P.Answer {
+          margin-top:10.5pt;
+          margin-bottom:0pt;
+          color:#008000;
+          font-weight:bold;
+          margin-left:19px;
+}
+LI.p-Answer {
+             color:#008000;
+             font-weight:bold;
+}
+DIV.droptext {
+              font-size:10pt;
+              font-family:Verdana, sans-serif;
+              color:#800000;
+}
+P.CodeFirst {
+             x-next-class:Code;
+             x-next-type:P;
+             font-family:"Courier New"  , monospace;
+             margin-bottom:0pt;
+             font-size:6pt;
+             margin-top:0pt;
+}
+LI.p-CodeFirst {
+                font-family:"Courier New"  , monospace;
+                font-size:6pt;
+}
+P.CodeLast {
+            font-family:"Courier New"  , monospace;
+            margin-bottom:0pt;
+            line-height:200%;
+            margin-top:-3pt;
+}
+LI.p-CodeLast {
+               font-family:"Courier New"  , monospace;
+               line-height:200%;
+}
+SPAN.Object {
+             font-family:"Courier New"  , monospace;
+}
+SPAN.GUI {
+          font-size:8pt;
+          font-weight:bold;
+          font-style:normal;
+}
+A:hover {
+         color:#0000ff;
+         text-decoration:underline;
+}
+A:active {
+          color:#0000ff;
+          text-decoration:underline;
+}
+P.HeaderTitle {
+               font-size:8pt;
+               font-style:italic;
+               font-weight:normal;
+               color:#c0c0c0;
+               margin-left:0pt;
+               margin-top:0pt;
+               margin-bottom:0pt;
+               text-align:Left;
+}
+LI.p-HeaderTitle {
+                  font-size:8pt;
+                  font-style:italic;
+                  font-weight:normal;
+                  color:#c0c0c0;
+                  text-align:Left;
+}
+P.FooterTitle {
+               font-size:8pt;
+               font-style:italic;
+               font-weight:normal;
+               color:#000080;
+}
+LI.p-FooterTitle {
+                  font-size:8pt;
+                  font-style:italic;
+                  font-weight:normal;
+                  color:#000080;
+}
+P.HeaderImage {
+               margin-top:0pt;
+               margin-bottom:0pt;
+               margin-left:-10px;
+}
+LI.p-HeaderImage {
+}
